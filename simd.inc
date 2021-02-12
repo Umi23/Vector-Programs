@@ -1,7 +1,7 @@
 {include simd.inc}
 { This include is part of the units xmmfloat,xmmint and ymmfloat.
 
-  Copyright (C) 2020,2021 Klaus Stöhr mail: k.stoehr@gmx.de
+  Copyright (C) 2020 Klaus Stöhr mail: k.stoehr@gmx.de
 
   This library is free software; you can redistribute it and/or modify it
   under the terms of the GNU Lesser General Public License as published by
