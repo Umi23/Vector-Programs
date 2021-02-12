@@ -203,6 +203,10 @@ interface
  {res = (Feld1*Feld2) + Feld3}
  function  FMulAddYSingle       (const Feld1,Feld2,Feld3 :array of T8Single;
                                  out   Res :array of T8Single):Longbool;overload;
+ {Res = Sum((Feld1 * Feld2))}
+ function  SumMulYSingle        (const Feld1,Feld2 :array of T8Single;
+                                 out Res :Single):Longbool;
+
  {(Feld1*Feld2)+Feld3; result in Feld1!}
  function  FMulAddYSingle       (var   Feld1 :array of T8Single;
                                  const Feld2,Feld3 :array of T8Single):Longbool;overload;
@@ -220,6 +224,10 @@ interface
                                  out   Res  :array of T2Double):Longbool;
  function  MulYDouble           (const Feld1,Feld2 :array of T4Double;
                                  out   Res  :array of T4Double):Longbool;
+ {Res = Sum(Feld1 * Feld2)}
+ function  SumMulYDouble        (const Feld1,Feld2 :array of T4Double;
+                                 out Res :Double):Longbool;
+
  {for division use the reciprocal value}
  procedure MulValueYDouble      (var   Feld :array of T4Double;constref Value :Double);overload;
  function  MulValueYDouble      (const Feld :array of T4Double;out Res :array of T4Double;
@@ -2774,6 +2782,50 @@ align 16;
   pop r12;
 end;
 
+
+{Res = Sum((Feld1 * Feld2))}
+function SumMulYSingle (const Feld1,Feld2 :array of T8Single;
+                         out Res :Single):Longbool;assembler;
+ asm
+  push r12;
+  {$IFNDEF WIN64}
+  mov r12,r8;             //Res
+  mov rcx,rdi;            //Feld1
+  mov rdx,rsi;            //length 1
+  mov r8, rdx;            //Feld2
+  mov r9, rcx;            //length 2
+  {$ENDIF}
+  {$IFDEF WIN64}
+  mov r12,qword ptr [Res];
+  {$ENDIF}
+  xor  rax,rax;
+  test rdx,rdx;                     // value < 0 not valid
+  js   @ende;
+  cmp  rdx,r9;              // lenght Feld1 = Feld2 = Feld3 = Res
+  jne  @ende;
+  mov  rax,1;
+  add  rdx,1;
+  xor r11,r11;
+  vxorps  ymm1,ymm1,ymm1;
+align 16;
+ @loop:
+  vmovups ymm0,ymmword ptr [rcx+r11];       //Feld1
+  vmulps  ymm0,ymm0,ymmword ptr [r8+r11];   //Feld1 * Feld2
+  vaddps  ymm1,ymm1,ymm0;
+  add r11,32;
+  sub rdx,1;
+  jnz @loop;
+  vextractf128 xmm2,ymm1,1;       // upper values
+  vaddps xmm2,xmm2,xmm1;          // add -> 4 values
+  vhaddps xmm2,xmm2,xmm2;         // horizontal add -> 2 values
+  vhaddps xmm2,xmm2,xmm2;         // -> 1 value
+  vmovss  qword ptr [r12],xmm2;
+  vzeroupper;
+ @ende:
+  pop r12;
+end;
+
+
 {Result = (Feld1 * Feld2) + Feld3; Result in Feld1}
 function FMulAddYSingle (var Feld1 :array of T8Single;
                          const Feld2,Feld3 :array of T8Single):Longbool;assembler;
@@ -3200,6 +3252,47 @@ align 16;
   pop r15;
   pop r14;
   pop r13;
+  pop r12;
+end;
+
+{Res = Sum(Feld1 * Feld2)}
+function SumMulYDouble (const Feld1,Feld2 :array of T4Double;
+                        out Res :Double):Longbool;assembler;
+ asm
+  push r12;
+ {$IFNDEF WIN64}
+  mov r12,r8;             // Res
+  mov rcx,rdi;            //Feld1
+  mov rdx,rsi;            //
+  mov r8, rdx;            //Feld2
+  mov r9, rcx;
+ {$ENDIF}
+ {$IFDEF WIN64}
+  mov r12,qword ptr [Res];
+ {$ENDIF}
+  xor  rax,rax;
+  test rdx,rdx;           // value < 0 not valid
+  js   @ende;
+  cmp  rdx,r9;            // lenght Feld1 = Feld2
+  jne  @ende;
+  mov  rax,1;
+  add  rdx,1;
+  xor r11,r11;
+  vxorpd  ymm1,ymm1,ymm1;  // set zero
+align 16;
+ @loop:
+  vmovupd ymm0,ymmword ptr [rcx+r11];      //Feld1
+  vmulpd  ymm0,ymm0,ymmword ptr [r8+r11];  // Feld1 * Feld2
+  vaddpd  ymm1,ymm1,ymm0;
+  add r11,32;
+  sub rdx,1;
+  jnz @loop;
+  vextractf128 xmm2,ymm1,1;   // upper value
+  vaddpd  xmm2,xmm2,xmm1;     // -> 2 value
+  vhaddpd xmm2,xmm2,xmm2;     // horizontal add -> 1 value
+  vmovsd  qword ptr [r12],xmm2;
+  vzeroupper;
+ @ende:
   pop r12;
 end;
 

@@ -122,6 +122,7 @@ function TestAddSubValueYDouble    :Boolean;
 function TestProductVYSingle       :Boolean;
 function TestProductYSingle        :Boolean;
 function TestMulYSingle            :Boolean;
+function TestSumMulYSingle         :Boolean;
 function TestFMulAddYSingle        :Boolean;
 function TestFMulAddYSingle1       :Boolean;
 function TestFMulSubYSingle        :Boolean;
@@ -140,6 +141,7 @@ function TestFMulSubYDouble        :Boolean;
 function TestFMulSubYDouble1       :Boolean;
 function TestMul2VYDouble          :Boolean;
 function TestMulYDouble            :Boolean;
+function TestSumMulYDouble         :Boolean;
 function TestMulValueYDouble       :Boolean;
 function TestMulValueYDouble1      :Boolean;
 
@@ -2108,6 +2110,26 @@ begin
  else Result := False;
 end;
 
+function TestSumMulYSingle :Boolean;
+ {Res = Sum((Feld1 * Feld2))}
+ const
+   Feld1 :array[0..1] of T8Single = ((1, 2, 3, 4, 5, 6, 7, 8),
+                                     (9,10,11,12,13,14,15,16));
+   Feld2 :array[0..1] of T8Single = ((17,18,19,20,21,22,23,24),
+                                     (25,26,27,28,29,30,31,32));
+   SollRes :Single = 3672;
+
+ var
+   Res :Single;
+
+begin
+  Result := False;
+  if SumMulYSingle (Feld1,Feld2,Res) then
+    if SollRes = Res then
+      Result := True;
+end;
+
+
 function TestMulYSingle :Boolean;
 {Res = Feld1 * Feld2}
  const
@@ -2548,6 +2570,24 @@ begin
   end
  else Result := False;
 end;
+
+function TestSumMulYDouble :Boolean;
+ {Res = Sum(Feld1 * Feld2)}
+ const
+   Feld1 :array[0..0] of T4Double = ((1,2,3,4));
+   Feld2 :array[0..0] of T4Double = ((5,6,7,8));
+   SollRes :Double = 70.0;
+
+ var
+   Res :Double;
+
+begin
+  Result := False;
+  if SumMulYDouble(Feld1,Feld2,Res) then
+    if SollRes = Res then
+      Result := True;
+end;
+
 
 function TestMulYDouble :Boolean;
 {Res = Feld1*Feld2}
